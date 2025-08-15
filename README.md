@@ -3,6 +3,8 @@
 🎆 ファイル保存時に ASCII 文字で花火アニメーションを表示する Neovim プラグイン
 夏っぽい雰囲気を Neovim に追加し、ファイル保存のたびに楽しい花火を楽しめます。
 
+https://github.com/user-attachments/assets/4d46aca9-0a50-402e-a05b-f8819688c6f2
+
 ## 特徴
 
 - ファイル保存時に自動で花火アニメーションを表示
