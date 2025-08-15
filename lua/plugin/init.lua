@@ -114,6 +114,16 @@ local function frame_points(burst, frame, max_frames)
 	return points
 end
 
+-- タイマーを配列から削除するヘルパー関数
+local function remove_timer(timer)
+	for i, t in ipairs(state.timers) do
+		if t == timer then
+			table.remove(state.timers, i)
+			break
+		end
+	end
+end
+
 local function animate_once(bufnr, cfg, meta)
 	-- meta: { intensity=1..3, bursts={...}, max_frames, frame_interval_ms }
 	local max_frames = meta.max_frames
@@ -129,6 +139,7 @@ local function animate_once(bufnr, cfg, meta)
 			if not vim.api.nvim_buf_is_loaded(bufnr) then
 				timer:stop()
 				timer:close()
+				remove_timer(timer)
 				return
 			end
 			clear_extmarks(bufnr)
@@ -152,6 +163,7 @@ local function animate_once(bufnr, cfg, meta)
 				clear_extmarks(bufnr)
 				timer:stop()
 				timer:close()
+				remove_timer(timer)
 			end
 		end)
 	)
