@@ -1,5 +1,9 @@
 local M = {}
 
+-- 定数定義
+local RANDOM_SEED_MAX = 2 ^ 31 -- Lua の数値精度制限のため 31 ビット整数に制限
+local FIREWORK_ASPECT_RATIO = 2.0 -- 花火の縦横比補正（2.0でほぼ正円に見える）
+
 local default_config = {
 	enable = true,
 	events = { "BufWritePost" }, -- 反応するイベント
@@ -11,11 +15,12 @@ local default_config = {
 	hl_groups = { "IncSearch", "WarningMsg", "String", "Type" }, -- 色味
 	chars = { "*", "+", "x", "o", "·" }, -- スパーク文字
 	random_seed = true, -- 起動ごとに乱数シード
+	aspect_ratio = FIREWORK_ASPECT_RATIO, -- 花火の縦横比補正
 }
 
 local state = {
 	ns = vim.api.nvim_create_namespace("ascii_fireworks"),
-	cfg = vim.deepcopy(default_config),
+	cfg = default_config, -- シンプルなテーブルなので浅いコピーで十分
 	timers = {}, -- 動作中アニメの管理
 }
 
@@ -98,12 +103,12 @@ local function make_bursts(vp, intensity)
 	return bursts
 end
 
-local function frame_points(burst, frame, max_frames)
+local function frame_points(burst, frame, max_frames, cfg)
 	-- 円周方向にだんだん広がる火花
 	local points = {}
 	local arms = 8
 	local r = frame * 2.0 -- 半径をフレームと連動
-	local aspect_ratio = 2.0 -- 縦横比補正（2.0でほぼ正円に見える）
+	local aspect_ratio = cfg.aspect_ratio -- 設定可能な縦横比補正
 
 	for k = 1, arms do
 		local theta = (2 * math.pi / arms) * (k + (frame % 2) * 0.25)
@@ -146,7 +151,7 @@ local function animate_once(bufnr, cfg, meta)
 
 			-- 各バーストの現フレーム描画
 			for _, b in ipairs(meta.bursts) do
-				local pts = frame_points(b, frame, max_frames)
+				local pts = frame_points(b, frame, max_frames, cfg)
 				for _, p in ipairs(pts) do
 					local ch = rand_choice(cfg.chars)
 					local hl = rand_choice(cfg.hl_groups)
@@ -211,7 +216,7 @@ function M.setup(user_config)
 	state.cfg = vim.tbl_deep_extend("force", default_config, user_config or {})
 
 	if state.cfg.random_seed then
-		math.randomseed(vim.loop.hrtime() % 2 ^ 31)
+		math.randomseed(vim.loop.hrtime() % RANDOM_SEED_MAX)
 	end
 
 	-- :Fireworks コマンド（手動発火）
