@@ -129,6 +129,15 @@ local function remove_timer(timer)
 	end
 end
 
+-- タイマーを安全にクローズするヘルパー関数
+local function safe_close_timer(timer)
+	if timer and not timer:is_closing() then
+		pcall(timer.stop, timer)
+		pcall(timer.close, timer)
+		remove_timer(timer)
+	end
+end
+
 local function animate_once(bufnr, cfg, meta)
 	-- meta: { intensity=1..3, bursts={...}, max_frames, frame_interval_ms }
 	local max_frames = meta.max_frames
@@ -142,9 +151,7 @@ local function animate_once(bufnr, cfg, meta)
 		meta.frame_interval_ms,
 		vim.schedule_wrap(function()
 			if not vim.api.nvim_buf_is_loaded(bufnr) then
-				timer:stop()
-				timer:close()
-				remove_timer(timer)
+				safe_close_timer(timer)
 				return
 			end
 			clear_extmarks(bufnr)
@@ -166,9 +173,7 @@ local function animate_once(bufnr, cfg, meta)
 			frame = frame + 1
 			if frame > max_frames then
 				clear_extmarks(bufnr)
-				timer:stop()
-				timer:close()
-				remove_timer(timer)
+				safe_close_timer(timer)
 			end
 		end)
 	)
